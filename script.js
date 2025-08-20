@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadUserData();
     startXOGameInterval();
+    renderLeaderboard();
 });
 
 // Initialize the application
@@ -257,14 +258,35 @@ function displayPowerPoint(file) {
     document.getElementById('powerpointViewer').classList.remove('hidden');
     document.getElementById('pdfViewer').classList.add('hidden');
     document.getElementById('codeViewer').classList.add('hidden');
-    
-    // Read PowerPoint file and extract content
+
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
-            // For .pptx files, we can extract some basic information
-            if (file.name.toLowerCase().endsWith('.pptx')) {
-                // This is a simplified approach - in a real implementation you'd use a library
+            if (file.name.toLowerCase().endsWith('.pptx') && window.JSZip) {
+                const zip = await JSZip.loadAsync(e.target.result);
+                const slideFiles = Object.keys(zip.files)
+                    .filter(path => path.match(/^ppt\/slides\/slide\d+\.xml$/))
+                    .sort((a, b) => {
+                        const na = parseInt(a.match(/slide(\d+)\.xml/)[1]);
+                        const nb = parseInt(b.match(/slide(\d+)\.xml/)[1]);
+                        return na - nb;
+                    });
+
+                const slides = [];
+                for (const path of slideFiles) {
+                    const xmlText = await zip.file(path).async('text');
+                    const text = (xmlText.match(/<a:t>(.*?)<\/a:t>/g) || [])
+                        .map(t => t.replace(/<\/?a:t>/g, ''))
+                        .join(' ')
+                        .trim();
+                    slides.push(text || '');
+                }
+
+                window._pptxState = { slides, index: 0 };
+                updatePptxSlide();
+                document.getElementById('slideInfo').textContent = `Slide 1 of ${slides.length}`;
+                showToast('PowerPoint (.pptx) loaded!', 'success');
+            } else {
                 const slideContent = document.getElementById('slideContent');
                 slideContent.innerHTML = `
                     <div class="slide-content-real">
@@ -274,9 +296,8 @@ function displayPowerPoint(file) {
                         </div>
                         <div class="slide-body">
                             <div class="slide-info">
-                                <h3>Presentation Content</h3>
+                                <h3>Presentation Info</h3>
                                 <ul>
-                                    <li>File Type: PowerPoint Presentation (.pptx)</li>
                                     <li>File Size: ${(file.size / 1024).toFixed(2)} KB</li>
                                     <li>Last Modified: ${new Date(file.lastModified).toLocaleDateString()}</li>
                                 </ul>
@@ -284,57 +305,26 @@ function displayPowerPoint(file) {
                             <div class="slide-preview">
                                 <div class="slide-placeholder">
                                     <i class="fas fa-file-powerpoint"></i>
-                                    <p>PowerPoint Content</p>
-                                    <small>Slide content would be displayed here</small>
+                                    <p>Preview not available for .ppt</p>
+                                    <small>Convert to .pptx for richer preview</small>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            } else {
-                // For .ppt files
-                const slideContent = document.getElementById('slideContent');
-                slideContent.innerHTML = `
-                    <div class="slide-content-real">
-                        <div class="slide-header">
-                            <h2>${file.name}</h2>
-                            <p>PowerPoint Presentation (Legacy Format)</p>
-                        </div>
-                        <div class="slide-body">
-                            <div class="slide-info">
-                                <h3>Presentation Content</h3>
-                                <ul>
-                                    <li>File Type: PowerPoint Presentation (.ppt)</li>
-                                    <li>File Size: ${(file.size / 1024).toFixed(2)} KB</li>
-                                    <li>Last Modified: ${new Date(file.lastModified).toLocaleDateString()}</li>
-                                </ul>
-                            </div>
-                            <div class="slide-preview">
-                                <div class="slide-placeholder">
-                                    <i class="fas fa-file-powerpoint"></i>
-                                    <p>PowerPoint Content</p>
-                                    <small>Slide content would be displayed here</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    </div>`;
+                showToast('PowerPoint file loaded!', 'success');
             }
-            
-            // Generate file analysis
+
             generateFileAnalysis(file, 'powerpoint');
-            
-            showToast('PowerPoint file loaded successfully!', 'success');
         } catch (error) {
             console.error('Error processing PowerPoint file:', error);
             showToast('Error processing PowerPoint file.', 'error');
         }
     };
-    
+
     reader.onerror = function() {
         showToast('Error reading PowerPoint file.', 'error');
     };
-    
+
     reader.readAsArrayBuffer(file);
 }
 
@@ -434,13 +424,32 @@ function generateFileAnalysis(file, fileType) {
 
 // PowerPoint Navigation Functions
 function previousSlide() {
-    // Mock slide navigation
-    showToast('Previous slide', 'info');
+    if (window._pptxState && window._pptxState.slides.length) {
+        window._pptxState.index = Math.max(0, window._pptxState.index - 1);
+        updatePptxSlide();
+    } else {
+        showToast('No slides available', 'info');
+    }
 }
 
 function nextSlide() {
-    // Mock slide navigation
-    showToast('Next slide', 'info');
+    if (window._pptxState && window._pptxState.slides.length) {
+        window._pptxState.index = Math.min(window._pptxState.slides.length - 1, window._pptxState.index + 1);
+        updatePptxSlide();
+    } else {
+        showToast('No slides available', 'info');
+    }
+}
+
+function updatePptxSlide() {
+    const { slides, index } = window._pptxState;
+    document.getElementById('slideInfo').textContent = `Slide ${index + 1} of ${slides.length}`;
+    const text = slides[index] || '(empty slide)';
+    document.getElementById('slideContent').innerHTML = `
+        <div class="slide-content-real">
+            <h3>Slide ${index + 1}</h3>
+            <p>${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+        </div>`;
 }
 
 // X-O Game Functions
@@ -1065,6 +1074,11 @@ function loadSettings() {
         document.getElementById('chatbotColor').value = settings.chatbotColor;
         changeChatbotColor();
     }
+    if (settings.panelColor) {
+        const panel = document.getElementById('panelColor');
+        if (panel) panel.value = settings.panelColor;
+        changePanelColor();
+    }
     
     // Load background image
     if (settings.backgroundImage) {
@@ -1218,6 +1232,14 @@ function changeChatbotColor() {
     
     const settings = JSON.parse(localStorage.getItem('teha_settings') || '{}');
     settings.chatbotColor = color;
+    localStorage.setItem('teha_settings', JSON.stringify(settings));
+}
+
+function changePanelColor() {
+    const color = document.getElementById('panelColor').value;
+    document.documentElement.style.setProperty('--panel-color', color);
+    const settings = JSON.parse(localStorage.getItem('teha_settings') || '{}');
+    settings.panelColor = color;
     localStorage.setItem('teha_settings', JSON.stringify(settings));
 }
 
@@ -1423,6 +1445,37 @@ function translateText() {
     document.getElementById('translateOutput').textContent = translation;
     
     showToast('Translation completed!', 'success');
+}
+
+function swapLanguages() {
+    const src = document.getElementById('sourceLanguage');
+    const tgt = document.getElementById('targetLanguage');
+    if (src.value !== 'auto') {
+        const tmp = src.value;
+        src.value = tgt.value;
+        tgt.value = tmp;
+    } else {
+        showToast('Auto detect cannot be swapped', 'info');
+    }
+}
+
+function copyTranslation() {
+    const out = document.getElementById('translateOutput').textContent;
+    if (!out) {
+        showToast('Nothing to copy', 'error');
+        return;
+    }
+    navigator.clipboard.writeText(out).then(() => showToast('Copied to clipboard', 'success'));
+}
+
+function speakTranslation() {
+    const out = document.getElementById('translateOutput').textContent;
+    if (!out) {
+        showToast('Nothing to speak', 'error');
+        return;
+    }
+    const utter = new SpeechSynthesisUtterance(out);
+    window.speechSynthesis.speak(utter);
 }
 
 // Notification Functions
@@ -1671,6 +1724,7 @@ function switchToLogin() {
 // Utility Functions
 function updatePointsDisplay() {
     document.getElementById('userPoints').textContent = userPoints;
+    renderLeaderboard();
 }
 
 function showToast(message, type = 'info') {
@@ -1703,6 +1757,32 @@ function loadUserData() {
     }
     
     updatePointsDisplay();
+}
+
+// Leaderboard (local, demo)
+function renderLeaderboard() {
+    const container = document.getElementById('leaderboardList');
+    if (!container) return;
+    const currentName = currentUser?.username || (document.getElementById('userName').value || 'You');
+    const entries = JSON.parse(localStorage.getItem('teha_leaderboard') || '[]');
+    const self = { name: currentName, points: userPoints };
+    const merged = mergeLeaderboard(entries, self).slice(0, 10);
+    localStorage.setItem('teha_leaderboard', JSON.stringify(merged));
+    container.innerHTML = merged.map((e, i) => `
+        <div class="leaderboard-item">
+            <span class="leaderboard-rank"><i class="fas fa-medal"></i> #${i + 1} ${e.name}</span>
+            <span>${e.points} pts</span>
+        </div>
+    `).join('');
+}
+
+function mergeLeaderboard(entries, self) {
+    const byName = new Map(entries.map(e => [e.name, e]));
+    const existing = byName.get(self.name);
+    if (!existing || self.points > existing.points) {
+        byName.set(self.name, { name: self.name, points: self.points });
+    }
+    return Array.from(byName.values()).sort((a, b) => b.points - a.points);
 }
 
 function handleKeyboardShortcuts(event) {
