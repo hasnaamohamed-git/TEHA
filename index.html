@@ -8,6 +8,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -59,107 +61,110 @@
                 <p>Hello <span id="welcomeUserName">there</span>! Your comprehensive learning companion</p>
             </div>
 
-            <!-- File Upload Section -->
-            <div class="upload-section">
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-content">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <h3>Upload Your Learning Materials</h3>
-                        <p>Drag and drop files here or click to browse</p>
-                        <p class="file-types">Supported: PDF, PowerPoint (.ppt, .pptx), Python (.py), Jupyter (.ipynb)</p>
-                        <input type="file" id="fileInput" accept=".pdf,.ppt,.pptx,.py,.ipynb" multiple>
-                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
-                            Choose Files
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- File Viewer Section -->
-            <div id="fileViewer" class="file-viewer hidden">
-                <div class="viewer-header">
-                    <h3 id="fileName">Document</h3>
-                    <button class="btn-close" onclick="closeFileViewer()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="viewer-content">
-                    <div id="pdfViewer" class="pdf-viewer hidden">
-                        <div class="pdf-controls">
-                            <button class="btn-secondary" onclick="previousPage()">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <span id="pageInfo">Page 1 of 1</span>
-                            <button class="btn-secondary" onclick="nextPage()">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <canvas id="pdfCanvas"></canvas>
-                    </div>
-                    <div id="powerpointViewer" class="powerpoint-viewer hidden">
-                        <div class="ppt-controls">
-                            <button class="btn-secondary" onclick="previousSlide()">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <span id="slideInfo">Slide 1 of 1</span>
-                            <button class="btn-secondary" onclick="nextSlide()">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div id="slideContent" class="slide-content"></div>
-                    </div>
-                    <div id="codeViewer" class="code-viewer hidden">
-                        <pre><code id="codeContent"></code></pre>
-                    </div>
-                </div>
-            </div>
-
-            <!-- File Analysis Section -->
-            <div id="fileAnalysis" class="file-analysis hidden">
-                <div class="analysis-header">
-                    <h3>File Analysis</h3>
-                </div>
-                <div class="analysis-content">
-                    <div class="analysis-section">
-                        <h4>Summary</h4>
-                        <div id="fileSummary" class="summary-content">
-                            <!-- Summary will be populated here -->
-                        </div>
-                    </div>
-                    <div class="analysis-section">
-                        <h4>Key Points</h4>
-                        <div id="fileKeyPoints" class="key-points-content">
-                            <!-- Key points will be populated here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chatbot Section -->
-            <div class="chatbot-section">
-                <div class="chatbot-container">
-                    <div class="chatbot-header">
-                        <h3>AI Assistant</h3>
-                        <span class="chatbot-status">Online</span>
-                    </div>
-                    <div class="chatbot-messages" id="chatbotMessages">
-                        <div class="message bot-message">
-                            <div class="message-content">
-                                <i class="fas fa-robot"></i>
-                                <span>Hello <span id="userGreeting">there</span>! I'm your AI assistant. How can I help you today?</span>
+            <div class="dashboard-grid">
+                <div class="left-column">
+                    <!-- File Upload Section -->
+                    <div class="upload-section">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h3>Upload Your Learning Materials</h3>
+                                <p>Drag and drop files here or click to browse</p>
+                                <p class="file-types">Supported: PDF, PowerPoint (.ppt, .pptx), Python (.py), Jupyter (.ipynb)</p>
+                                <input type="file" id="fileInput" accept=".pdf,.ppt,.pptx,.py,.ipynb" multiple>
+                                <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                                    Choose Files
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div class="chatbot-input">
-                        <input type="text" id="chatbotInput" placeholder="Ask me anything..." onkeypress="handleChatbotKeyPress(event)">
-                        <button onclick="sendChatbotMessage()">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
+
+                    <!-- File Viewer Section -->
+                    <div id="fileViewer" class="file-viewer hidden">
+                        <div class="viewer-header">
+                            <h3 id="fileName">Document</h3>
+                            <button class="btn-close" onclick="closeFileViewer()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="viewer-content">
+                            <div id="pdfViewer" class="pdf-viewer hidden">
+                                <div class="pdf-controls">
+                                    <button class="btn-secondary" onclick="previousPage()">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <span id="pageInfo">Page 1 of 1</span>
+                                    <button class="btn-secondary" onclick="nextPage()">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <canvas id="pdfCanvas"></canvas>
+                            </div>
+                            <div id="powerpointViewer" class="powerpoint-viewer hidden">
+                                <div class="ppt-controls">
+                                    <button class="btn-secondary" onclick="previousSlide()">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <span id="slideInfo">Slide 1 of 1</span>
+                                    <button class="btn-secondary" onclick="nextSlide()">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <div id="slideContent" class="slide-content"></div>
+                            </div>
+                            <div id="codeViewer" class="code-viewer hidden">
+                                <pre><code id="codeContent"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Analysis Section -->
+                    <div id="fileAnalysis" class="file-analysis hidden">
+                        <div class="analysis-header">
+                            <h3>File Analysis</h3>
+                        </div>
+                        <div class="analysis-content">
+                            <div class="analysis-section">
+                                <h4>Summary</h4>
+                                <div id="fileSummary" class="summary-content">
+                                    <!-- Summary will be populated here -->
+                                </div>
+                            </div>
+                            <div class="analysis-section">
+                                <h4>Key Points</h4>
+                                <div id="fileKeyPoints" class="key-points-content">
+                                    <!-- Key points will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="right-column">
+                    <!-- Chatbot Section -->
+                    <div class="chatbot-section">
+                        <div class="chatbot-container">
+                            <div class="chatbot-header">
+                                <h3>AI Assistant</h3>
+                                <span class="chatbot-status">Online</span>
+                            </div>
+                            <div class="chatbot-messages" id="chatbotMessages">
+                                <div class="message bot-message">
+                                    <div class="message-content">
+                                        <i class="fas fa-robot"></i>
+                                        <span>Hello <span id="userGreeting">there</span>! I'm your AI assistant. How can I help you today?</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chatbot-input">
+                                <input type="text" id="chatbotInput" placeholder="Ask me anything..." onkeypress="handleChatbotKeyPress(event)">
+                                <button onclick="sendChatbotMessage()">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-
         </div>
 
         <!-- Notes Page -->
@@ -270,6 +275,10 @@
                             <option value="large">Large</option>
                         </select>
                     </div>
+                    <div class="setting-item">
+                        <label>Panels/Windows Color</label>
+                        <input type="color" id="panelColor" onchange="changePanelColor()" value="#ffffff">
+                    </div>
                 </div>
                 <div class="settings-section">
                     <h3>Game Settings</h3>
@@ -333,6 +342,10 @@
                         <input type="range" id="glassOpacity" min="0" max="100" value="10" onchange="changeGlassOpacity()">
                         <span id="glassOpacityValue">10%</span>
                     </div>
+                </div>
+                <div class="settings-section">
+                    <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
+                    <div id="leaderboardList" class="leaderboard-list"></div>
                 </div>
                 <div class="settings-section">
                     <h3>Color Customization</h3>
@@ -455,9 +468,9 @@
 
     <!-- Translate Modal -->
     <div id="translateModal" class="modal hidden">
-        <div class="modal-content">
+        <div class="modal-content translate-modal">
             <div class="modal-header">
-                <h3>Translate Text</h3>
+                <h3><i class="fas fa-language"></i> Translate Text</h3>
                 <button class="btn-close" onclick="closeTranslate()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -468,7 +481,22 @@
                     <textarea id="translateInput" placeholder="Enter text to translate..."></textarea>
                 </div>
                 <div class="translate-controls">
-                    <select id="targetLanguage">
+                    <select id="sourceLanguage" class="language-select">
+                        <option value="auto" selected>Auto Detect</option>
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ru">Russian</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                        <option value="zh">Chinese</option>
+                        <option value="ar">Arabic</option>
+                    </select>
+                    <button class="btn-secondary swap-btn" title="Swap" onclick="swapLanguages()"><i class="fas fa-exchange-alt"></i></button>
+                    <select id="targetLanguage" class="language-select">
                         <option value="es">Spanish</option>
                         <option value="fr">French</option>
                         <option value="de">German</option>
@@ -487,6 +515,10 @@
                 </div>
                 <div class="translate-output">
                     <label>Translation</label>
+                    <div class="translation-toolbar">
+                        <button class="btn-secondary" onclick="copyTranslation()"><i class="fas fa-copy"></i> Copy</button>
+                        <button class="btn-secondary" onclick="speakTranslation()"><i class="fas fa-volume-up"></i> Speak</button>
+                    </div>
                     <div id="translateOutput" class="translation-result"></div>
                 </div>
             </div>

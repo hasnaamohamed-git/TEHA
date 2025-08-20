@@ -35,6 +35,7 @@
     --xo-o-color: #8b5cf6;
     --fab-color: #6366f1;
     --chatbot-color: #6366f1;
+    --panel-color: var(--bg-primary);
 }
 
 /* Dark Theme Variables */
@@ -190,6 +191,19 @@ body::before {
 .dashboard-header {
     text-align: center;
     margin-bottom: 3rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.left-column, .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .dashboard-header h2 {
@@ -1201,6 +1215,76 @@ body::before {
     color: var(--text-primary);
 }
 
+/* Enhanced Translation Extras */
+.translate-modal .modal-header h3 i {
+    margin-right: 0.5rem;
+}
+
+.language-select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.swap-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.translation-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Leaderboard */
+.leaderboard-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+}
+
+.leaderboard-rank {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.leaderboard-rank i {
+    color: var(--warning-color);
+}
+
+/* Apply global panel color */
+.upload-area,
+.file-viewer,
+.file-analysis,
+.notes-sidebar,
+.note-card,
+.note-editor,
+.quiz-item,
+.quiz-question,
+.quiz-results,
+.settings-section,
+.chatbot-container,
+.modal-content {
+    background: var(--panel-color);
+}
+
 /* Audio Generation Modal */
 .audio-generation-controls {
     text-align: center;
@@ -1502,4 +1586,74 @@ select:focus {
     .page {
         display: block !important;
     }
+}
+
+/* Enhanced Translate Modal tweaks */
+.translate-modal .modal-header h3 i {
+    margin-right: 0.5rem;
+}
+
+.language-select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.swap-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+}
+
+.translation-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Leaderboard */
+.leaderboard-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+}
+
+.leaderboard-rank {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.leaderboard-rank i {
+    color: var(--warning-color);
+}
+
+/* Global panel/window color control */
+.upload-area,
+.file-viewer,
+.file-analysis,
+.notes-sidebar,
+.note-card,
+.note-editor,
+.quiz-item,
+.quiz-question,
+.quiz-results,
+.settings-section,
+.chatbot-container,
+.modal-content {
+    background: var(--panel-color);
 }
