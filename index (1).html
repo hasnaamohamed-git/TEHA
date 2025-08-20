@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEHA - Educational Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>TEHA</h1>
+            <span class="subtitle">Educational Platform</span>
+        </div>
+        <div class="nav-menu">
+            <button class="nav-btn active" data-page="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-btn" data-page="notes">
+                <i class="fas fa-sticky-note"></i>
+                <span>Notes</span>
+            </button>
+            <button class="nav-btn notification-btn" onclick="openNotifications()">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+            </button>
+            <button class="nav-btn" data-page="quiz">
+                <i class="fas fa-question-circle"></i>
+                <span>Quiz</span>
+            </button>
+            <button class="nav-btn" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </div>
+        <div class="nav-user">
+            <div class="points-display">
+                <i class="fas fa-star"></i>
+                <span id="userPoints">0</span>
+            </div>
+            <div class="user-info">
+                <span id="username">Guest</span>
+                <button id="loginBtn" class="btn-primary">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="dashboard-header">
+                <h2>Welcome to TEHA</h2>
+                <p>Hello <span id="welcomeUserName">there</span>! Your comprehensive learning companion</p>
+            </div>
+
+            <!-- File Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Upload Your Learning Materials</h3>
+                        <p>Drag and drop files here or click to browse</p>
+                        <p class="file-types">Supported: PDF, PowerPoint (.ppt, .pptx), Python (.py), Jupyter (.ipynb)</p>
+                        <input type="file" id="fileInput" accept=".pdf,.ppt,.pptx,.py,.ipynb" multiple>
+                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                            Choose Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Viewer Section -->
+            <div id="fileViewer" class="file-viewer hidden">
+                <div class="viewer-header">
+                    <h3 id="fileName">Document</h3>
+                    <button class="btn-close" onclick="closeFileViewer()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="viewer-content">
+                    <div id="pdfViewer" class="pdf-viewer hidden">
+                        <div class="pdf-controls">
+                            <button class="btn-secondary" onclick="previousPage()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="pageInfo">Page 1 of 1</span>
+                            <button class="btn-secondary" onclick="nextPage()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <canvas id="pdfCanvas"></canvas>
+                    </div>
+                    <div id="powerpointViewer" class="powerpoint-viewer hidden">
+                        <div class="ppt-controls">
+                            <button class="btn-secondary" onclick="previousSlide()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="slideInfo">Slide 1 of 1</span>
+                            <button class="btn-secondary" onclick="nextSlide()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div id="slideContent" class="slide-content"></div>
+                    </div>
+                    <div id="codeViewer" class="code-viewer hidden">
+                        <pre><code id="codeContent"></code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Analysis Section -->
+            <div id="fileAnalysis" class="file-analysis hidden">
+                <div class="analysis-header">
+                    <h3>File Analysis</h3>
+                </div>
+                <div class="analysis-content">
+                    <div class="analysis-section">
+                        <h4>Summary</h4>
+                        <div id="fileSummary" class="summary-content">
+                            <!-- Summary will be populated here -->
+                        </div>
+                    </div>
+                    <div class="analysis-section">
+                        <h4>Key Points</h4>
+                        <div id="fileKeyPoints" class="key-points-content">
+                            <!-- Key points will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chatbot Section -->
+            <div class="chatbot-section">
+                <div class="chatbot-container">
+                    <div class="chatbot-header">
+                        <h3>AI Assistant</h3>
+                        <span class="chatbot-status">Online</span>
+                    </div>
+                    <div class="chatbot-messages" id="chatbotMessages">
+                        <div class="message bot-message">
+                            <div class="message-content">
+                                <i class="fas fa-robot"></i>
+                                <span>Hello <span id="userGreeting">there</span>! I'm your AI assistant. How can I help you today?</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chatbot-input">
+                        <input type="text" id="chatbotInput" placeholder="Ask me anything..." onkeypress="handleChatbotKeyPress(event)">
+                        <button onclick="sendChatbotMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Notes Page -->
+        <div id="notes" class="page">
+            <div class="page-header">
+                <h2>My Notes</h2>
+                <button class="btn-primary" onclick="createNewNote()">
+                    <i class="fas fa-plus"></i>
+                    New Note
+                </button>
+            </div>
+            <div class="notes-container">
+                <div class="notes-sidebar">
+                    <div class="note-categories">
+                        <h3>Categories</h3>
+                        <button class="category-btn active" data-category="all">All Notes</button>
+                        <button class="category-btn" data-category="General">General</button>
+                        <button class="category-btn" data-category="Study">Study</button>
+                        <button class="category-btn" data-category="Ideas">Ideas</button>
+                        <button class="category-btn" data-category="Tasks">Tasks</button>
+                    </div>
+                </div>
+                <div class="notes-content">
+                    <div id="notesList" class="notes-list">
+                        <!-- Notes will be populated here -->
+                    </div>
+                    <div id="noteEditor" class="note-editor hidden">
+                        <div class="editor-header">
+                            <input type="text" id="noteTitle" placeholder="Note Title" class="note-title-input">
+                            <select id="noteCategory" class="note-category-select">
+                                <option value="General">General</option>
+                                <option value="Study">Study</option>
+                                <option value="Ideas">Ideas</option>
+                                <option value="Tasks">Tasks</option>
+                            </select>
+                        </div>
+                        <textarea id="noteContent" placeholder="Start writing your note..." class="note-content-textarea"></textarea>
+                        <div class="editor-actions">
+                            <button class="btn-secondary" onclick="saveNote()">
+                                <i class="fas fa-save"></i>
+                                Save
+                            </button>
+                            <button class="btn-secondary" onclick="cancelNote()">
+                                <i class="fas fa-times"></i>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quiz" class="page">
+            <div class="page-header">
+                <h2>Knowledge Quiz</h2>
+                <div class="quiz-stats">
+                    <span>Score: <span id="quizScore">0</span></span>
+                    <span>Questions: <span id="quizProgress">0/0</span></span>
+                </div>
+            </div>
+            <div class="quiz-container">
+                <div id="quizList" class="quiz-list">
+                    <!-- Quiz selection will be here -->
+                </div>
+                <div id="quizQuestion" class="quiz-question hidden">
+                    <h3 id="questionText">Question</h3>
+                    <div id="questionOptions" class="question-options">
+                        <!-- Options will be populated here -->
+                    </div>
+                    <div class="question-actions">
+                        <button class="btn-primary" onclick="submitAnswer()">Submit Answer</button>
+                    </div>
+                </div>
+                <div id="quizResults" class="quiz-results hidden">
+                    <h3>Quiz Results</h3>
+                    <div class="result-stats">
+                        <p>Score: <span id="finalScore">0</span></p>
+                        <p>Correct Answers: <span id="correctAnswers">0</span></p>
+                        <p>Points Earned: <span id="pointsEarned">0</span></p>
+                    </div>
+                    <button class="btn-primary" onclick="retakeQuiz()">Take Another Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="page">
+            <div class="page-header">
+                <h2>Settings</h2>
+            </div>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="setting-item">
+                        <label>Theme</label>
+                        <select id="themeSelect" onchange="changeTheme()">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Font Size</label>
+                        <select id="fontSize" onchange="changeFontSize()">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Game Settings</h3>
+                    <div class="setting-item">
+                        <label>X-O Game Duration (seconds)</label>
+                        <input type="number" id="gameDuration" value="30" min="10" max="60">
+                    </div>
+                    <div class="setting-item">
+                        <label>Game Interval (minutes)</label>
+                        <input type="number" id="gameInterval" value="2" min="1" max="10">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>User Information</h3>
+                    <div class="setting-item">
+                        <label>Your Name</label>
+                        <input type="text" id="userName" placeholder="Enter your name">
+                    </div>
+                    <div class="setting-item">
+                        <label>AI Assistant Name</label>
+                        <input type="text" id="chatbotName" placeholder="Enter AI assistant name">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Advanced GUI Controls</h3>
+                    <div class="setting-item">
+                        <label>Background Image</label>
+                        <input type="file" id="backgroundImage" accept="image/*" onchange="changeBackgroundImage()">
+                    </div>
+                    <div class="setting-item">
+                        <label>Border Radius</label>
+                        <input type="range" id="borderRadius" min="0" max="50" value="12" onchange="changeBorderRadius()">
+                        <span id="borderRadiusValue">12px</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Shadow Intensity</label>
+                        <input type="range" id="shadowIntensity" min="0" max="50" value="10" onchange="changeShadowIntensity()">
+                        <span id="shadowIntensityValue">10px</span>
+                    </div>
+                    <div class="setting-item">
+                        <label>Animation Speed</label>
+                        <select id="animationSpeed" onchange="changeAnimationSpeed()">
+                            <option value="slow">Slow</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="fast">Fast</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Font Family</label>
+                        <select id="fontFamily" onchange="changeFontFamily()">
+                            <option value="Inter">Inter</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Open Sans">Open Sans</option>
+                            <option value="Lato">Lato</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Montserrat">Montserrat</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Glass Effect Opacity</label>
+                        <input type="range" id="glassOpacity" min="0" max="100" value="10" onchange="changeGlassOpacity()">
+                        <span id="glassOpacityValue">10%</span>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Color Customization</h3>
+                    <div class="setting-item">
+                        <label>Primary Color</label>
+                        <input type="color" id="primaryColor" onchange="changePrimaryColor()" value="#6366f1">
+                    </div>
+                    <div class="setting-item">
+                        <label>Secondary Color</label>
+                        <input type="color" id="secondaryColor" onchange="changeSecondaryColor()" value="#8b5cf6">
+                    </div>
+                    <div class="setting-item">
+                        <label>Accent Color</label>
+                        <input type="color" id="accentColor" onchange="changeAccentColor()" value="#06b6d4">
+                    </div>
+                    <div class="setting-item">
+                        <label>Success Color</label>
+                        <input type="color" id="successColor" onchange="changeSuccessColor()" value="#10b981">
+                    </div>
+                    <div class="setting-item">
+                        <label>Warning Color</label>
+                        <input type="color" id="warningColor" onchange="changeWarningColor()" value="#f59e0b">
+                    </div>
+                    <div class="setting-item">
+                        <label>Error Color</label>
+                        <input type="color" id="errorColor" onchange="changeErrorColor()" value="#ef4444">
+                    </div>
+                    <div class="setting-item">
+                        <label>Text Primary Color</label>
+                        <input type="color" id="textPrimaryColor" onchange="changeTextPrimaryColor()" value="#1f2937">
+                    </div>
+                    <div class="setting-item">
+                        <label>Text Secondary Color</label>
+                        <input type="color" id="textSecondaryColor" onchange="changeTextSecondaryColor()" value="#6b7280">
+                    </div>
+                    <div class="setting-item">
+                        <label>Background Primary Color</label>
+                        <input type="color" id="bgPrimaryColor" onchange="changeBgPrimaryColor()" value="#ffffff">
+                    </div>
+                    <div class="setting-item">
+                        <label>Background Secondary Color</label>
+                        <input type="color" id="bgSecondaryColor" onchange="changeBgSecondaryColor()" value="#f9fafb">
+                    </div>
+                    <div class="setting-item">
+                        <label>X-O Game X Color</label>
+                        <input type="color" id="xoXColor" onchange="changeXOXColor()" value="#6366f1">
+                    </div>
+                    <div class="setting-item">
+                        <label>X-O Game O Color</label>
+                        <input type="color" id="xoOColor" onchange="changeXOOColor()" value="#8b5cf6">
+                    </div>
+                    <div class="setting-item">
+                        <label>Floating Action Button Color</label>
+                        <input type="color" id="fabColor" onchange="changeFABColor()" value="#6366f1">
+                    </div>
+                    <div class="setting-item">
+                        <label>Chatbot Color</label>
+                        <input type="color" id="chatbotColor" onchange="changeChatbotColor()" value="#6366f1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Buttons -->
+    <div class="floating-actions">
+        <button class="fab translate-fab" onclick="openTranslate()" title="Translate">
+            <i class="fas fa-language"></i>
+        </button>
+        <button class="fab audio-fab" onclick="openAudioGeneration()" title="Generate Audio">
+            <i class="fas fa-volume-up"></i>
+        </button>
+    </div>
+
+    <!-- X-O Game Modal -->
+    <div id="xoGameModal" class="modal hidden">
+        <div class="modal-content game-modal">
+            <div class="game-header">
+                <h3>X-O Game</h3>
+                <div class="game-stats">
+                    <div class="game-timer">
+                        <span id="gameTimer">30</span>s
+                    </div>
+                    <div class="game-points">
+                        <span id="gamePoints">0</span> pts
+                    </div>
+                </div>
+                <button class="btn-close" onclick="closeXOGame()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="game-board">
+                <div class="board-row">
+                    <div class="board-cell" data-cell="0"></div>
+                    <div class="board-cell" data-cell="1"></div>
+                    <div class="board-cell" data-cell="2"></div>
+                </div>
+                <div class="board-row">
+                    <div class="board-cell" data-cell="3"></div>
+                    <div class="board-cell" data-cell="4"></div>
+                    <div class="board-cell" data-cell="5"></div>
+                </div>
+                <div class="board-row">
+                    <div class="board-cell" data-cell="6"></div>
+                    <div class="board-cell" data-cell="7"></div>
+                    <div class="board-cell" data-cell="8"></div>
+                </div>
+            </div>
+            <div class="game-info">
+                <p>You vs AI Assistant</p>
+                <p>Current Player: <span id="currentPlayer">You (X)</span></p>
+                <p>Score - You: <span id="scorePlayer">0</span> | AI: <span id="scoreAI">0</span></p>
+            </div>
+            <div class="game-actions">
+                <button class="btn-primary" onclick="resetGame()">New Game</button>
+                <button class="btn-secondary" onclick="closeXOGame()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Translate Modal -->
+    <div id="translateModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Translate Text</h3>
+                <button class="btn-close" onclick="closeTranslate()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="translate-input">
+                    <label>Text to Translate</label>
+                    <textarea id="translateInput" placeholder="Enter text to translate..."></textarea>
+                </div>
+                <div class="translate-controls">
+                    <select id="targetLanguage">
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="it">Italian</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ru">Russian</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                        <option value="zh">Chinese</option>
+                        <option value="ar">Arabic</option>
+                    </select>
+                    <button class="btn-primary" onclick="translateText()">
+                        <i class="fas fa-language"></i>
+                        Translate
+                    </button>
+                </div>
+                <div class="translate-output">
+                    <label>Translation</label>
+                    <div id="translateOutput" class="translation-result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Set Reminder</h3>
+                <button class="btn-close" onclick="closeNotifications()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="notification-form">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="notificationTitle" placeholder="Reminder title">
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="notificationMessage" placeholder="Reminder message"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="datetime-local" id="notificationTime">
+                    </div>
+                    <div class="form-group">
+                        <label>Repeat</label>
+                        <select id="notificationRepeat">
+                            <option value="none">No Repeat</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="setNotification()">
+                        <i class="fas fa-bell"></i>
+                        Set Reminder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login to TEHA</h3>
+                <button class="btn-close" onclick="closeLogin()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="login-form">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter password">
+                    </div>
+                    <button class="btn-primary" onclick="login()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login
+                    </button>
+                    <p class="login-switch">
+                        Don't have an account? 
+                        <a href="#" onclick="switchToRegister()">Register</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Register for TEHA</h3>
+                <button class="btn-close" onclick="closeRegister()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="register-form">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="registerUsername" placeholder="Choose username">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="registerEmail" placeholder="Enter email">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="registerPassword" placeholder="Choose password">
+                    </div>
+                    <button class="btn-primary" onclick="register()">
+                        <i class="fas fa-user-plus"></i>
+                        Register
+                    </button>
+                    <p class="register-switch">
+                        Already have an account? 
+                        <a href="#" onclick="switchToLogin()">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Generation Modal -->
+    <div id="audioModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Audio Generation</h3>
+                <button class="btn-close" onclick="closeAudioGeneration()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="audio-generation-controls">
+                    <div class="file-info">
+                        <h4>Generate Audio for Current File</h4>
+                        <p id="currentFileName">No file selected</p>
+                    </div>
+                    <div class="generation-options">
+                        <div class="form-group">
+                            <label>Voice Type</label>
+                            <select id="voiceType">
+                                <option value="male">Male Voice</option>
+                                <option value="female">Female Voice</option>
+                                <option value="neutral">Neutral Voice</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Speed</label>
+                            <select id="audioSpeed">
+                                <option value="slow">Slow</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="fast">Fast</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="generateAudioBtn" class="btn-primary" onclick="generateAudioForFile()">
+                        <i class="fas fa-volume-up"></i>
+                        Generate Audio
+                    </button>
+                    <div id="generationStatus" class="generation-status hidden">
+                        <div class="generation-indicator">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Generating audio...
+                        </div>
+                        <div class="generation-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="generationProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="generatedAudioPlayer" class="generated-audio-player hidden">
+                    <h4>Generated Audio</h4>
+                    <audio id="generatedAudio" controls></audio>
+                    <div class="audio-actions">
+                        <button class="btn-secondary" onclick="downloadGeneratedAudio()">
+                            <i class="fas fa-download"></i>
+                            Download Audio
+                        </button>
+                        <button class="btn-secondary" onclick="playGeneratedAudio()">
+                            <i class="fas fa-play"></i>
+                            Play Audio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notificationToast" class="toast hidden">
+        <div class="toast-content">
+            <i class="fas fa-bell"></i>
+            <span id="toastMessage">Notification message</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
